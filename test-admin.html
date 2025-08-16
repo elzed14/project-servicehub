@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Admin ServiceHub</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        button { padding: 10px 20px; margin: 10px; cursor: pointer; }
+        .step { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🔑 Test du Panneau d'Administration ServiceHub</h1>
+    
+    <div class="step">
+        <h2>📋 Instructions de test</h2>
+        <ol>
+            <li>Démarrez les serveurs avec <code>npm run dev:full</code></li>
+            <li>Ouvrez <a href="http://localhost:5173" target="_blank">http://localhost:5173</a></li>
+            <li>Cliquez sur "Accès rapide" dans le header</li>
+            <li>Sélectionnez le compte "Alexandre Dubois" (avec badge 🔑 ADMIN)</li>
+            <li>Cliquez sur "Admin" dans la navigation</li>
+            <li>Vérifiez que le dashboard s'affiche avec les données</li>
+        </ol>
+    </div>
+
+    <div class="step">
+        <h2>✅ Points à vérifier</h2>
+        <ul>
+            <li>✓ Badge "ADMIN" visible sur le compte Alexandre</li>
+            <li>✓ Onglet "Admin" accessible dans la navigation</li>
+            <li>✓ Header admin avec gradient bleu-violet</li>
+            <li>✓ Statistiques affichées (utilisateurs, services, revenus)</li>
+            <li>✓ Onglets de navigation (Vue d'ensemble, Utilisateurs, etc.)</li>
+            <li>✓ Permissions visibles dans l'interface</li>
+        </ul>
+    </div>
+
+    <div class="step">
+        <h2>🛠️ Données de test</h2>
+        <div class="info">
+            <strong>Statistiques mockées :</strong><br>
+            • Utilisateurs totaux: 1,247<br>
+            • Services actifs: 856<br>
+            • Utilisateurs actifs: 89<br>
+            • Revenus: 45,680€<br>
+            • Croissance mensuelle: +15.3%
+        </div>
+    </div>
+
+    <div class="step">
+        <h2>🔧 Dépannage</h2>
+        <p><strong>Si rien ne s'affiche :</strong></p>
+        <ul>
+            <li>Vérifiez la console du navigateur (F12)</li>
+            <li>Assurez-vous d'être connecté avec le compte admin</li>
+            <li>Rechargez la page</li>
+            <li>Vérifiez que les serveurs sont démarrés</li>
+        </ul>
+    </div>
+
+    <div class="step">
+        <h2>📊 Test des fonctionnalités</h2>
+        <p><strong>Fonctionnalités à tester :</strong></p>
+        <ul>
+            <li>Navigation entre les onglets</li>
+            <li>Affichage des utilisateurs</li>
+            <li>Affichage des services</li>
+            <li>Paramètres système</li>
+            <li>Profil admin (onglet spécial dans le profil)</li>
+        </ul>
+    </div>
+
+    <script>
+        console.log('🔑 Test Admin ServiceHub - Page de test chargée');
+        console.log('📋 Suivez les instructions ci-dessus pour tester le panneau admin');
+        
+        // Vérification de localStorage
+        const checkLocalStorage = () => {
+            const user = localStorage.getItem('servicehub_user');
+            const token = localStorage.getItem('servicehub_token');
+            
+            if (user && token) {
+                const userData = JSON.parse(user);
+                console.log('✅ Utilisateur connecté:', userData.name);
+                console.log('🔑 Rôle:', userData.role);
+                
+                if (userData.role === 'admin') {
+                    console.log('👑 Compte administrateur détecté !');
+                } else {
+                    console.log('⚠️ Attention: Ce n\'est pas un compte administrateur');
+                }
+            } else {
+                console.log('❌ Aucun utilisateur connecté');
+            }
+        };
+        
+        // Vérifier toutes les 2 secondes
+        setInterval(checkLocalStorage, 2000);
+        checkLocalStorage();
+    </script>
+</body>
+</html>

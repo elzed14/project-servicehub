@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test ServiceHub Auth</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .success { color: green; }
+        .error { color: red; }
+        button { padding: 10px 20px; margin: 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Test d'authentification ServiceHub</h1>
+    
+    <div id="status">Prêt pour les tests...</div>
+    
+    <h2>Tests disponibles :</h2>
+    <button onclick="testBackend()">Tester Backend</button>
+    <button onclick="testAuth()">Tester Authentification</button>
+    <button onclick="testLocalStorage()">Tester LocalStorage</button>
+    
+    <div id="results"></div>
+
+    <script>
+        async function testBackend() {
+            const status = document.getElementById('status');
+            const results = document.getElementById('results');
+            
+            try {
+                status.innerHTML = 'Test du backend...';
+                const response = await fetch('http://localhost:3001/api/health');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    status.innerHTML = '<span class="success">✅ Backend OK</span>';
+                    results.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                } else {
+                    status.innerHTML = '<span class="error">❌ Backend Error</span>';
+                }
+            } catch (error) {
+                status.innerHTML = '<span class="error">❌ Backend non accessible</span>';
+                results.innerHTML = `Erreur: ${error.message}`;
+            }
+        }
+        
+        async function testAuth() {
+            const status = document.getElementById('status');
+            const results = document.getElementById('results');
+            
+            try {
+                status.innerHTML = 'Test d\'authentification...';
+                const response = await fetch('http://localhost:3001/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: 'Test User',
+                        email: 'test@example.com',
+                        password: '123456',
+                        location: 'Test Location'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    status.innerHTML = '<span class="success">✅ Authentification OK</span>';
+                    results.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                } else {
+                    status.innerHTML = '<span class="error">❌ Authentification Error</span>';
+                    results.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                }
+            } catch (error) {
+                status.innerHTML = '<span class="error">❌ Erreur d\'authentification</span>';
+                results.innerHTML = `Erreur: ${error.message}`;
+            }
+        }
+        
+        function testLocalStorage() {
+            const status = document.getElementById('status');
+            const results = document.getElementById('results');
+            
+            // Test d'écriture
+            const testUser = {
+                id: 'test-123',
+                name: 'Test User',
+                email: 'test@example.com'
+            };
+            
+            localStorage.setItem('servicehub_user', JSON.stringify(testUser));
+            localStorage.setItem('servicehub_token', 'test-token-123');
+            
+            // Test de lecture
+            const savedUser = localStorage.getItem('servicehub_user');
+            const savedToken = localStorage.getItem('servicehub_token');
+            
+            if (savedUser && savedToken) {
+                status.innerHTML = '<span class="success">✅ LocalStorage OK</span>';
+                results.innerHTML = `
+                    <h3>Données sauvegardées :</h3>
+                    <p><strong>User:</strong> ${savedUser}</p>
+                    <p><strong>Token:</strong> ${savedToken}</p>
+                `;
+            } else {
+                status.innerHTML = '<span class="error">❌ LocalStorage Error</span>';
+            }
+            
+            // Nettoyer
+            localStorage.removeItem('servicehub_user');
+            localStorage.removeItem('servicehub_token');
+        }
+    </script>
+</body>
+</html>

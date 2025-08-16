@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Paramètres Admin</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-item { margin: 15px 0; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .warning { background-color: #fff3cd; border-color: #ffeaa7; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 8px 16px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Test des Paramètres Admin ServiceHub</h1>
+    
+    <div class="test-item info">
+        <h2>📋 Instructions de test</h2>
+        <ol>
+            <li>Connectez-vous avec le compte admin (Alexandre Dubois)</li>
+            <li>Allez dans Admin → Paramètres</li>
+            <li>Testez chaque élément ci-dessous</li>
+        </ol>
+    </div>
+
+    <div class="test-item">
+        <h3>✅ Éléments à tester</h3>
+        <ul>
+            <li><strong>Nom de la plateforme</strong> - Champ texte modifiable</li>
+            <li><strong>Taux de commission</strong> - Champ numérique avec min/max</li>
+            <li><strong>Approbation automatique</strong> - Checkbox cliquable</li>
+            <li><strong>Vérification email</strong> - Checkbox cliquable</li>
+            <li><strong>Mode maintenance</strong> - Checkbox avec style spécial</li>
+            <li><strong>Limites</strong> - Images max, prix min/max</li>
+            <li><strong>Bouton Réinitialiser</strong> - Remet les valeurs par défaut</li>
+            <li><strong>Bouton Prévisualiser</strong> - Affiche les données dans la console</li>
+            <li><strong>Bouton Sauvegarder</strong> - Animation de chargement + message</li>
+        </ul>
+    </div>
+
+    <div class="test-item success">
+        <h3>🎯 Fonctionnalités améliorées</h3>
+        <ul>
+            <li>✓ Interface organisée en sections</li>
+            <li>✓ Labels et descriptions claires</li>
+            <li>✓ Validation des champs numériques</li>
+            <li>✓ Feedback visuel pour les checkboxes</li>
+            <li>✓ Animation de sauvegarde</li>
+            <li>✓ Messages de succès/erreur</li>
+            <li>✓ Boutons avec icônes</li>
+            <li>✓ Responsive design</li>
+        </ul>
+    </div>
+
+    <div class="test-item warning">
+        <h3>⚠️ Points d'attention</h3>
+        <ul>
+            <li>Le mode maintenance affiche un style rouge quand activé</li>
+            <li>Les champs numériques ont des limites min/max</li>
+            <li>La sauvegarde simule un délai de 1 seconde</li>
+            <li>Les messages disparaissent automatiquement</li>
+        </ul>
+    </div>
+
+    <div class="test-item">
+        <h3>🔧 Valeurs par défaut</h3>
+        <pre>
+Nom de la plateforme: "ServiceHub"
+Taux de commission: 5.0%
+Approbation automatique: Non
+Vérification email: Oui
+Images max par service: 5
+Prix minimum: 10€
+Prix maximum: 10,000€
+Mode maintenance: Non
+        </pre>
+    </div>
+
+    <script>
+        console.log('🔧 Test des paramètres admin - Page chargée');
+        
+        // Fonction pour tester les paramètres
+        function testSettings() {
+            console.log('🧪 Début des tests des paramètres...');
+            
+            // Vérifier si l'utilisateur est admin
+            const user = localStorage.getItem('servicehub_user');
+            if (user) {
+                const userData = JSON.parse(user);
+                if (userData.role === 'admin') {
+                    console.log('✅ Utilisateur admin détecté');
+                    console.log('👤 Nom:', userData.name);
+                    console.log('🔑 Permissions:', userData.permissions);
+                } else {
+                    console.warn('⚠️ Utilisateur non-admin détecté');
+                }
+            } else {
+                console.error('❌ Aucun utilisateur connecté');
+            }
+        }
+        
+        // Lancer le test au chargement
+        testSettings();
+        
+        // Surveiller les changements de localStorage
+        window.addEventListener('storage', testSettings);
+    </script>
+</body>
+</html>
