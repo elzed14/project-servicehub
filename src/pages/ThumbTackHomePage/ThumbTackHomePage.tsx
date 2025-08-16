@@ -3,12 +3,13 @@ import { motion } from 'framer-motion';
 import { Search, MapPin, Star, ArrowRight, CheckCircle, Users, Shield, Clock } from 'lucide-react';
 import { ModernButton } from '../../shared/components/ui/ModernButton';
 import { useRealTimeStats } from '../../shared/hooks/useRealTimeStats';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export const ThumbTackHomePage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [location, setLocation] = useState('');
   const { stats } = useRealTimeStats();
+  const navigate = useNavigate();
 
   const popularServices = [
     { name: 'Plomberie', icon: '🔧', requests: '2,500+' },
@@ -113,14 +114,16 @@ export const ThumbTackHomePage: React.FC = () => {
                   </div>
                 </div>
                 
-                <Link to={`/search?q=${searchQuery}&loc=${location}`}>
+                <button
+                  onClick={() => navigate(`/search?query=${encodeURIComponent(searchQuery)}&location=${encodeURIComponent(location)}`)}
+                >
                   <ModernButton 
                     className="w-full py-4 text-lg font-semibold"
                     size="lg"
                   >
                     Obtenir des devis gratuits
                   </ModernButton>
-                </Link>
+                </button>
               </div>
 
               {/* Stats en temps réel */}
@@ -186,7 +189,11 @@ export const ThumbTackHomePage: React.FC = () => {
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {popularServices.map((service, index) => (
-              <Link to={`/search?q=${service.name}`} key={service.name}>
+              <button
+                key={service.name}
+                onClick={() => navigate(`/search?query=${encodeURIComponent(service.name)}`)}
+                className="w-full"
+              >
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -203,7 +210,7 @@ export const ThumbTackHomePage: React.FC = () => {
                     {service.requests} demandes
                   </p>
                 </motion.div>
-              </Link>
+              </button>
             ))}
           </div>
         </div>
@@ -321,7 +328,7 @@ export const ThumbTackHomePage: React.FC = () => {
                 variant="secondary" 
                 size="lg"
                 className="bg-white text-blue-600 hover:bg-gray-50"
-                onClick={() => window.location.hash = '#search'}
+                onClick={() => navigate('/search')}
               >
                 Trouver un expert
                 <ArrowRight className="w-5 h-5 ml-2" />
@@ -330,7 +337,7 @@ export const ThumbTackHomePage: React.FC = () => {
                 variant="outline" 
                 size="lg"
                 className="border-white text-white hover:bg-white hover:text-blue-600"
-                onClick={() => window.location.hash = '#expert'}
+                onClick={() => navigate('/become-expert')}
               >
                 Devenir expert
               </ModernButton>

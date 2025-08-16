@@ -1,27 +1,26 @@
 import React from 'react';
 import { Search, Plus, Users, Shield, Zap, Heart } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { categories } from '../data/mockData';
 import * as Icons from 'lucide-react';
 
 interface HomePageProps {
-  onViewChange: (view: string) => void;
+  onViewChange?: (view: string) => void;
 }
 
 export default function HomePage({ onViewChange }: HomePageProps) {
-  const handleViewChange = (view: string) => {
-    onViewChange(view);
+  const navigate = useNavigate();
+
+  const handleNavigation = (path: string) => {
+    if (onViewChange) {
+      onViewChange(path);
+    } else {
+      navigate(path);
+    }
   };
 
   return (
     <div className="space-y-12">
-      {/* Info Banner */}
-      <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
-        <p className="text-green-800">
-          <span className="font-semibold">Mode démonstration activé !</span> 
-          Cliquez sur "Accès rapide" pour vous connecter instantanément avec un compte de démo ou créer un nouveau compte.
-        </p>
-      </div>
-
       {/* Hero Section */}
       <section className="text-center py-12 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl">
         <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
@@ -33,18 +32,18 @@ export default function HomePage({ onViewChange }: HomePageProps) {
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <button
-            onClick={() => handleViewChange('browse')}
+            onClick={() => handleNavigation('/browse')}
             className="flex items-center justify-center space-x-2 px-8 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
           >
             <Search className="w-5 h-5" />
             <span>Trouver un service</span>
           </button>
           <button
-            onClick={() => handleViewChange('post')}
+            onClick={() => handleNavigation('/become-expert')}
             className="flex items-center justify-center space-x-2 px-8 py-4 bg-white text-blue-600 font-semibold rounded-lg border-2 border-blue-600 hover:bg-blue-50 transition-colors"
           >
             <Plus className="w-5 h-5" />
-            <span>Proposer un service</span>
+            <span>Devenir expert</span>
           </button>
         </div>
       </section>
@@ -116,7 +115,7 @@ export default function HomePage({ onViewChange }: HomePageProps) {
             return (
               <button
                 key={category.id}
-                onClick={() => handleViewChange('browse')}
+                onClick={() => handleNavigation('/browse')}
                 className="p-6 rounded-lg bg-white shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 group"
               >
                 <div className={`w-12 h-12 ${category.color} rounded-lg flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform`}>
@@ -140,7 +139,7 @@ export default function HomePage({ onViewChange }: HomePageProps) {
           Rejoignez des milliers d'utilisateurs qui font confiance à ServiceHub
         </p>
         <button
-          onClick={() => handleViewChange('post')}
+          onClick={() => handleNavigation('/become-expert')}
           className="px-8 py-4 bg-white text-blue-600 font-semibold rounded-lg hover:bg-gray-100 transition-colors"
         >
           Créer mon premier service

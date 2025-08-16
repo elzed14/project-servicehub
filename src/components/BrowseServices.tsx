@@ -1,147 +1,161 @@
 import React, { useState, useEffect } from 'react';
-import { mockServices, categories } from '../data/mockData';
-import ServiceCard from './ServiceCard';
-import { Service } from '../types';
-import { Search, MapPin, Filter, Grid, List, Loader2 } from 'lucide-react';
-import * as Icons from 'lucide-react';
+import { Search, MapPin, Filter, Grid, List, Loader2, Star } from 'lucide-react';
+import { serviceService, Service } from '../shared/services/serviceService';
+import { useNavigate } from 'react-router-dom';
 
 interface BrowseServicesProps {
-  onContactService: (service: Service) => void;
-  onOrderService?: (service: Service, options: any) => void;
+  onContactService?: (service: Service) => void;
 }
 
 export default function BrowseServices({ onContactService }: BrowseServicesProps) {
+  const navigate = useNavigate();
   const [services, setServices] = useState<Service[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchTerm, setSearchTerm] = useState('');
   const [location, setLocation] = useState('');
-  const [serviceType, setServiceType] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [minRating, setMinRating] = useState(0);
+  const [sortBy, setSortBy] = useState('newest');
+
+  const categories = [
+    'Développement Web',
+    'Développement Mobile', 
+    'Design',
+    'Marketing',
+    'Rédaction',
+    'Consultation'
+  ];
 
   useEffect(() => {
-    setTimeout(() => {
-      setServices(mockServices);
-      setLoading(false);
-    }, 500);
-  }, []);
+    fetchServices();
+  }, [searchTerm, location, selectedCategory, minRating, sortBy]);
 
-  const filteredServices = services.filter(service => {
-    const matchesSearch = service.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         service.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesLocation = !location || service.location.toLowerCase().includes(location.toLowerCase());
-    const matchesType = !serviceType || service.type === serviceType;
-    const matchesCategory = !selectedCategory || service.category === selectedCategory;
-    
-    return matchesSearch && matchesLocation && matchesType && matchesCategory;
-  });
+  const fetchServices = async () => {
+    setLoading(true);
+    try {
+      const response = await serviceService.searchServices({
+        query: searchTerm,
+        location,
+        category: selectedCategory,
+        minRating,
+        sortBy: sortBy as any
+      });
+      setServices(response.services);
+    } catch (error) {
+      console.error('Error fetching services:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleServiceClick = (service: Service) => {
+    navigate(`/expert/${service.expert._id}`);
+  };
+
+  const handleContactService = (service: Service) => {
+    if (onContactService) {
+      onContactService(service);
+    } else {
+      navigate(`/messages?expertId=${service.expert._id}`);
+    }
+  };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+    <div className="max-w-7xl mx-auto px-4 py-8 space-y-6">
+      {/* Header */}
+      <div className="text-center">
+        <h1 className="text-4xl font-bold text-gray-900 mb-4">
           Découvrez nos services
         </h1>
-        <p className="text-gray-600">
-          Trouvez le service parfait ou proposez le vôtre
+        <p className="text-xl text-gray-600">
+          Trouvez l'expert parfait pour votre projet
         </p>
       </div>
 
       {/* Filtres de recherche */}
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="bg-white rounded-2xl shadow-lg p-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
           {/* Recherche */}
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-gray-400" />
-            </div>
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
               type="text"
               placeholder="Rechercher un service..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
 
           {/* Localisation */}
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <MapPin className="h-5 w-5 text-gray-400" />
-            </div>
+            <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
               type="text"
               placeholder="Localisation..."
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
 
-          {/* Type de service */}
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Filter className="h-5 w-5 text-gray-400" />
-            </div>
-            <select
-              value={serviceType}
-              onChange={(e) => setServiceType(e.target.value)}
-              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
-            >
-              <option value="">Tous les types</option>
-              <option value="offer">Offres de service</option>
-              <option value="request">Demandes de service</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* Filtres de catégories */}
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Catégories</h3>
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => setSelectedCategory('')}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-              selectedCategory === ''
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+          {/* Catégorie */}
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
-            Toutes
-          </button>
-          {categories.map((category) => {
-            const IconComponent = Icons[category.icon as keyof typeof Icons] as React.ComponentType<any>;
-            return (
+            <option value="">Toutes les catégories</option>
+            {categories.map((category) => (
+              <option key={category} value={category}>{category}</option>
+            ))}
+          </select>
+
+          {/* Tri */}
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="newest">Plus récents</option>
+            <option value="rating">Mieux notés</option>
+            <option value="price">Prix croissant</option>
+          </select>
+        </div>
+
+        {/* Note minimale */}
+        <div className="flex items-center space-x-4">
+          <span className="text-sm font-medium text-gray-700">Note minimale :</span>
+          <div className="flex items-center space-x-1">
+            {[1, 2, 3, 4, 5].map((rating) => (
               <button
-                key={category.id}
-                onClick={() => setSelectedCategory(category.name)}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  selectedCategory === category.name
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                key={rating}
+                onClick={() => setMinRating(rating === minRating ? 0 : rating)}
+                className={`p-1 ${minRating >= rating ? 'text-yellow-400' : 'text-gray-300'}`}
               >
-                {IconComponent && <IconComponent className="w-4 h-4" />}
-                <span>{category.name}</span>
+                <Star className="w-5 h-5 fill-current" />
               </button>
-            );
-          })}
+            ))}
+          </div>
+          <span className="text-sm text-gray-600">
+            {minRating > 0 ? `${minRating}+ étoiles` : 'Toutes notes'}
+          </span>
         </div>
       </div>
 
-      <div className="flex justify-between items-center">
+      {/* Contrôles d'affichage */}
+      <div className="flex items-center justify-between">
         <p className="text-gray-600">
-          {filteredServices.length} service{filteredServices.length !== 1 ? 's' : ''} trouvé{filteredServices.length !== 1 ? 's' : ''}
+          {services.length} service{services.length !== 1 ? 's' : ''} trouvé{services.length !== 1 ? 's' : ''}
         </p>
         
-        {/* Mode d'affichage */}
         <div className="flex items-center space-x-2">
           <span className="text-sm text-gray-600">Affichage :</span>
-          <div className="flex border border-gray-300 rounded-md">
+          <div className="flex border border-gray-300 rounded-lg overflow-hidden">
             <button
               onClick={() => setViewMode('grid')}
-              className={`px-3 py-1 text-sm flex items-center space-x-1 ${
+              className={`px-3 py-2 text-sm flex items-center space-x-1 ${
                 viewMode === 'grid'
                   ? 'bg-blue-600 text-white'
                   : 'text-gray-600 hover:bg-gray-100'
@@ -152,7 +166,7 @@ export default function BrowseServices({ onContactService }: BrowseServicesProps
             </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`px-3 py-1 text-sm flex items-center space-x-1 ${
+              className={`px-3 py-2 text-sm flex items-center space-x-1 ${
                 viewMode === 'list'
                   ? 'bg-blue-600 text-white'
                   : 'text-gray-600 hover:bg-gray-100'
@@ -165,62 +179,167 @@ export default function BrowseServices({ onContactService }: BrowseServicesProps
         </div>
       </div>
 
+      {/* Résultats */}
       {loading ? (
         <div className="flex justify-center items-center h-64">
           <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+          <span className="ml-2 text-gray-600">Recherche en cours...</span>
         </div>
-      ) : error ? (
-        <div className="text-red-500 text-center py-12">{error}</div>
       ) : (
         <>
           {viewMode === 'grid' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredServices.map((service) => (
-                <ServiceCard
-                  key={service.id}
-                  service={service}
-                  onContact={onContactService}
-                />
+              {services.map((service) => (
+                <div
+                  key={service._id}
+                  className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-100 overflow-hidden"
+                  onClick={() => handleServiceClick(service)}
+                >
+                  {service.images && service.images[0] && (
+                    <div className="h-48 overflow-hidden">
+                      <img
+                        src={service.images[0]}
+                        alt={service.title}
+                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                  )}
+                  
+                  <div className="p-6">
+                    <div className="flex items-start justify-between mb-3">
+                      <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">
+                        {service.title}
+                      </h3>
+                      <span className="text-xl font-bold text-blue-600 ml-2">
+                        {service.price.toLocaleString()} FCFA
+                      </span>
+                    </div>
+                    
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                      {service.description}
+                    </p>
+                    
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                        {service.category}
+                      </span>
+                      <div className="flex items-center text-sm text-gray-500">
+                        <MapPin className="w-4 h-4 mr-1" />
+                        {service.location}
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <img
+                          src={service.expert.avatar}
+                          alt={service.expert.name}
+                          className="w-8 h-8 rounded-full object-cover"
+                        />
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">{service.expert.name}</p>
+                          <div className="flex items-center">
+                            <Star className="w-3 h-3 text-yellow-400 fill-current mr-1" />
+                            <span className="text-xs text-gray-600">
+                              {service.expert.rating} ({service.expert.reviewCount})
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleContactService(service);
+                        }}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                      >
+                        Contacter
+                      </button>
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
           ) : (
             <div className="space-y-4">
-              {filteredServices.map((service) => (
-                <div key={service.id} className="bg-white rounded-lg shadow-md p-6">
+              {services.map((service) => (
+                <div
+                  key={service._id}
+                  className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow cursor-pointer p-6"
+                  onClick={() => handleServiceClick(service)}
+                >
                   <div className="flex items-start space-x-6">
-                    {service.images && service.images.length > 0 && (
-                      <div className="flex-shrink-0">
-                        <img
-                          src={service.images[0]}
-                          alt={service.title}
-                          className="w-32 h-24 object-cover rounded-lg"
-                        />
-                      </div>
+                    {service.images && service.images[0] && (
+                      <img
+                        src={service.images[0]}
+                        alt={service.title}
+                        className="w-32 h-24 object-cover rounded-lg flex-shrink-0"
+                      />
                     )}
+                    
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between">
+                      <div className="flex items-start justify-between mb-3">
                         <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                          <h3 className="text-xl font-semibold text-gray-900 mb-2">
                             {service.title}
                           </h3>
-                          <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                          <p className="text-gray-600 mb-3 line-clamp-2">
                             {service.description}
                           </p>
                           <div className="flex items-center space-x-4 text-sm text-gray-500">
-                            <span>📍 {service.location}</span>
-                            <span>⭐ {service.provider.rating} ({service.provider.reviews} avis)</span>
+                            <span className="flex items-center">
+                              <MapPin className="w-4 h-4 mr-1" />
+                              {service.location}
+                            </span>
+                            <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                              {service.category}
+                            </span>
                           </div>
                         </div>
-                        <div className="flex-shrink-0 text-right">
-                          <div className="text-2xl font-bold text-gray-900 mb-3">
-                            {service.price}
+                        <div className="text-right ml-4">
+                          <div className="text-2xl font-bold text-blue-600 mb-2">
+                            {service.price.toLocaleString()} FCFA
                           </div>
                           <button
-                            onClick={() => onContactService(service)}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleContactService(service);
+                            }}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                           >
                             Contacter
                           </button>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <img
+                            src={service.expert.avatar}
+                            alt={service.expert.name}
+                            className="w-8 h-8 rounded-full object-cover"
+                          />
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{service.expert.name}</p>
+                            <div className="flex items-center">
+                              <Star className="w-3 h-3 text-yellow-400 fill-current mr-1" />
+                              <span className="text-xs text-gray-600">
+                                {service.expert.rating} ({service.expert.reviewCount} avis)
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex flex-wrap gap-1">
+                          {service.tags.slice(0, 3).map((tag, index) => (
+                            <span
+                              key={index}
+                              className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
+                            >
+                              {tag}
+                            </span>
+                          ))}
                         </div>
                       </div>
                     </div>
@@ -230,13 +349,14 @@ export default function BrowseServices({ onContactService }: BrowseServicesProps
             </div>
           )}
 
-          {filteredServices.length === 0 && !loading && (
+          {services.length === 0 && !loading && (
             <div className="text-center py-12">
-              <p className="text-gray-500 text-lg">
-                Aucun service trouvé pour vos critères de recherche.
-              </p>
-              <p className="text-gray-400 mt-2">
-                Essayez de modifier vos filtres ou de publier votre propre service.
+              <div className="text-6xl mb-4">🔍</div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                Aucun service trouvé
+              </h3>
+              <p className="text-gray-600">
+                Essayez de modifier vos critères de recherche
               </p>
             </div>
           )}

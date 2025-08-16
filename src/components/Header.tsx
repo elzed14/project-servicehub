@@ -1,27 +1,33 @@
 import React, { useState } from 'react';
-import { User, Plus, Search, Settings, MessageCircle, LogOut, ChevronDown } from 'lucide-react';
+import { User, Plus, Search, Settings, MessageCircle, LogOut, ChevronDown, Home } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 interface HeaderProps {
-  currentView: string;
-  onViewChange: (view: string) => void;
-  onOpenMessaging: () => void;
+  currentView?: string;
+  onViewChange?: (view: string) => void;
+  onOpenMessaging?: () => void;
   unreadMessages?: number;
 }
 
-export default function Header({ currentView, onViewChange, onOpenMessaging, unreadMessages = 0 }: HeaderProps) {
+export default function Header({ unreadMessages = 0 }: HeaderProps) {
   const { state, openAuthModal, logout } = useAppContext();
-  const { auth, currentUser } = state;
+  const { currentUser } = state;
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = async () => {
     setShowUserMenu(false);
     await logout();
   };
 
-  const handleViewChange = (view: string) => {
-    onViewChange(view);
-  };
+  const navigation = [
+    { path: '/', label: 'Accueil', icon: Home },
+    { path: '/browse', label: 'Trouver des services', icon: Search },
+    { path: '/become-expert', label: 'Devenir expert', icon: Plus },
+    { path: '/how-it-works', label: 'Comment ça marche', icon: Settings }
+  ];
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
@@ -29,7 +35,7 @@ export default function Header({ currentView, onViewChange, onOpenMessaging, unr
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
             <button
-              onClick={() => handleViewChange('home')}
+              onClick={() => navigate('/')}
               className="text-2xl font-bold text-blue-600 hover:text-blue-700 transition-colors"
             >
               ServiceHub
@@ -37,47 +43,28 @@ export default function Header({ currentView, onViewChange, onOpenMessaging, unr
           </div>
           
           <nav className="hidden md:flex space-x-8">
-            <button
-              onClick={() => handleViewChange('browse')}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                currentView === 'browse' 
-                  ? 'bg-blue-100 text-blue-700' 
-                  : 'text-gray-700 hover:text-blue-600'
-              }`}
-            >
-              <Search className="w-4 h-4" />
-              <span>Trouver des services</span>
-            </button>
-            <button
-              onClick={() => handleViewChange('post')}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                currentView === 'post' 
-                  ? 'bg-blue-100 text-blue-700' 
-                  : 'text-gray-700 hover:text-blue-600'
-              }`}
-            >
-              <Plus className="w-4 h-4" />
-              <span>Proposer un service</span>
-            </button>
-            <button
-              onClick={() => handleViewChange('admin')}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                currentView === 'admin' 
-                  ? 'bg-red-100 text-red-700' 
-                  : 'text-gray-700 hover:text-red-600'
-              }`}
-            >
-              <Settings className="w-4 h-4" />
-              <span>Admin</span>
-            </button>
+            {navigation.map((item) => (
+              <button
+                key={item.path}
+                onClick={() => navigate(item.path)}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  location.pathname === item.path
+                    ? 'bg-blue-100 text-blue-700' 
+                    : 'text-gray-700 hover:text-blue-600'
+                }`}
+              >
+                <item.icon className="w-4 h-4" />
+                <span>{item.label}</span>
+              </button>
+            ))}
           </nav>
 
           <div className="flex items-center space-x-4">
-            {auth.isAuthenticated && currentUser ? (
+            {currentUser ? (
               <>
-                {/* Messages - seulement pour les utilisateurs connectés */}
+                {/* Messages */}
                 <button
-                  onClick={onOpenMessaging}
+                  onClick={() => navigate('/messages')}
                   className="relative flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
                 >
                   <MessageCircle className="w-4 h-4" />
@@ -110,22 +97,22 @@ export default function Header({ currentView, onViewChange, onOpenMessaging, unr
                       <button
                         onClick={() => {
                           setShowUserMenu(false);
-                          handleViewChange('dashboard');
-                        }}
-                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                      >
-                        <Settings className="w-4 h-4 mr-3" />
-                        Tableau de bord
-                      </button>
-                      <button
-                        onClick={() => {
-                          setShowUserMenu(false);
-                          handleViewChange('profile');
+                          navigate('/profile');
                         }}
                         className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                       >
                         <User className="w-4 h-4 mr-3" />
                         Mon profil
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowUserMenu(false);
+                          navigate('/become-expert');
+                        }}
+                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      >
+                        <Plus className="w-4 h-4 mr-3" />
+                        Publier un service
                       </button>
                       <hr className="my-1" />
                       <button
@@ -141,13 +128,17 @@ export default function Header({ currentView, onViewChange, onOpenMessaging, unr
               </>
             ) : (
               <>
-                {/* Bouton d'accès rapide */}
                 <button
                   onClick={() => openAuthModal('login')}
-                  className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
+                  className="text-gray-700 hover:text-blue-600 font-medium transition-colors"
                 >
-                  <User className="w-4 h-4" />
-                  Accès rapide
+                  Se connecter
+                </button>
+                <button
+                  onClick={() => openAuthModal('register')}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                >
+                  S'inscrire
                 </button>
               </>
             )}
@@ -157,77 +148,21 @@ export default function Header({ currentView, onViewChange, onOpenMessaging, unr
       
       {/* Mobile Navigation */}
       <div className="md:hidden border-t border-gray-200">
-        <div className="flex">
-          <button
-            onClick={() => handleViewChange('browse')}
-            className={`flex-1 flex items-center justify-center space-x-2 py-3 text-sm font-medium transition-colors ${
-              currentView === 'browse' 
-                ? 'bg-blue-100 text-blue-700' 
-                : 'text-gray-700'
-            }`}
-          >
-            <Search className="w-4 h-4" />
-            <span>Trouver</span>
-          </button>
-          <button
-            onClick={() => handleViewChange('post')}
-            className={`flex-1 flex items-center justify-center space-x-2 py-3 text-sm font-medium transition-colors ${
-              currentView === 'post' 
-                ? 'bg-blue-100 text-blue-700' 
-                : 'text-gray-700'
-            }`}
-          >
-            <Plus className="w-4 h-4" />
-            <span>Proposer</span>
-          </button>
-          {auth.isAuthenticated && currentUser ? (
-            <>
-              <button
-                onClick={onOpenMessaging}
-                className="flex-1 flex items-center justify-center space-x-2 py-3 text-sm font-medium text-gray-700 relative"
-              >
-                <MessageCircle className="w-4 h-4" />
-                <span>Messages</span>
-                {unreadMessages > 0 && (
-                  <span className="absolute top-1 right-4 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                    {unreadMessages > 9 ? '9+' : unreadMessages}
-                  </span>
-                )}
-              </button>
-              <button
-                onClick={() => handleViewChange('admin')}
-                className={`flex-1 flex items-center justify-center space-x-2 py-3 text-sm font-medium transition-colors ${
-                  currentView === 'admin'
-                    ? 'bg-red-100 text-red-700'
-                    : 'text-gray-700'
-                }`}
-              >
-                <Settings className="w-4 h-4" />
-                <span>Admin</span>
-              </button>
-              <button
-                onClick={() => handleViewChange('profile')}
-                className={`flex-1 flex items-center justify-center space-x-2 py-3 text-sm font-medium transition-colors ${
-                  currentView === 'profile'
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'text-gray-700'
-                }`}
-              >
-                <User className="w-4 h-4" />
-                <span>Profil</span>
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                onClick={() => openAuthModal('login')}
-                className="flex-1 flex items-center justify-center py-3 text-sm font-medium text-blue-600"
-              >
-                <User className="w-4 h-4 mr-1" />
-                Accès
-              </button>
-            </>
-          )}
+        <div className="flex overflow-x-auto">
+          {navigation.map((item) => (
+            <button
+              key={item.path}
+              onClick={() => navigate(item.path)}
+              className={`flex-1 flex items-center justify-center space-x-2 py-3 text-sm font-medium transition-colors min-w-0 ${
+                location.pathname === item.path
+                  ? 'bg-blue-100 text-blue-700' 
+                  : 'text-gray-700'
+              }`}
+            >
+              <item.icon className="w-4 h-4" />
+              <span className="truncate">{item.label}</span>
+            </button>
+          ))}
         </div>
       </div>
     </header>

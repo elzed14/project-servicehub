@@ -1,11 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Upload, Plus, X, Loader2, Image as ImageIcon, Trash2 } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
-import { serviceService } from '../services/serviceService';
-import { uploadService } from '../services/uploadService';
+import { serviceService } from '../shared/services/serviceService';
 import { Category } from '../types';
+import { useAppContext } from '../context/AppContext';
+import { useNotifications } from '../hooks/useNotifications';
 
 export default function PostService() {
+  const { state } = useAppContext();
+  const { currentUser } = state;
+  const { success, error } = useNotifications();
   const [serviceType, setServiceType] = useState<'offer' | 'request'>('offer');
   const [formData, setFormData] = useState({
     title: '',
@@ -21,19 +25,21 @@ export default function PostService() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     setUploading(true);
     try {
-      const response = await uploadService.uploadImages(acceptedFiles);
-      const newImageUrls = response.urls;
+      // Simulation d'upload d'images
+      const newImageUrls = acceptedFiles.map((file, index) => 
+        `https://images.unsplash.com/photo-${1500000 + index}/photo.jpg?w=400`
+      );
       setFormData(prev => ({ ...prev, images: [...prev.images, ...newImageUrls] }));
       const newImagePreviews = acceptedFiles.map(file => URL.createObjectURL(file));
       setImagePreviews(prev => [...prev, ...newImagePreviews]);
     } catch (err) {
-      setError('Image upload failed');
+      setFormError('Erreur lors de l\'upload des images');
       console.error(err);
     } finally {
       setUploading(false);
@@ -47,15 +53,23 @@ export default function PostService() {
   });
 
   useEffect(() => {
-    const fetchCategories = async () => {
+    const loadCategories = async () => {
       try {
-        const response = await serviceService.getCategories();
-        setCategories(response.data);
+        const categories = await serviceService.getCategories();
+        const categoryObjects = categories.map((name, index) => ({
+          id: (index + 1).toString(),
+          name,
+          icon: 'Code',
+          color: 'bg-blue-500',
+          isActive: true,
+          serviceCount: 0
+        }));
+        setCategories(categoryObjects);
       } catch (error) {
         console.error("Failed to fetch categories", error);
       }
     };
-    fetchCategories();
+    loadCategories();
   }, []);
 
   useEffect(() => {
@@ -64,24 +78,45 @@ export default function PostService() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!currentUser) {
+      error('Vous devez être connecté pour publier un service');
+      return;
+    }
+    
     setLoading(true);
-    setError(null);
+    setFormError(null);
     try {
-      await serviceService.createService(formData);
-      alert('Service publié avec succès !');
-      setFormData({
-        title: '',
-        description: '',
-        category: '',
-        price: '',
-        location: '',
-        tags: [],
-        images: [],
-        type: serviceType,
+      const response = await serviceService.createService({
+        ...formData,
+        expert: {
+          _id: currentUser.id,
+          name: currentUser.name,
+          avatar: currentUser.avatar,
+          rating: currentUser.rating,
+          reviewCount: currentUser.reviews
+        }
       });
-      setImagePreviews([]);
+      
+      if (response.success) {
+        success('Service publié avec succès !');
+        // Reset form
+        setFormData({
+          title: '',
+          description: '',
+          category: '',
+          price: '',
+          location: '',
+          tags: [],
+          images: [],
+          type: serviceType,
+        });
+        setImagePreviews([]);
+      } else {
+        setFormError(response.message || 'Erreur lors de la publication');
+      }
     } catch (err) {
-      setError('Failed to post service');
+      setFormError('Erreur lors de la publication du service');
       console.error(err);
     } finally {
       setLoading(false);
@@ -309,6 +344,11 @@ export default function PostService() {
           </div>
 
           {error && <p className="text-red-500 text-sm">{error}</p>}
+          {formError && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+              {formError}
+            </div>
+          )}
 
           <button
             type="submit"

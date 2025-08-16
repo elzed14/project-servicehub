@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Eye, EyeOff, Loader2, User, Mail, MapPin, Briefcase } from 'lucide-react';
 import { ModernButton } from '../ui/ModernButton';
-import { authService, LoginData, RegisterData } from '../../services/authService';
+import { useAppContext } from '../../../context/AppContext';
 
 interface FunctionalAuthModalProps {
   isOpen: boolean;
@@ -21,14 +21,15 @@ export const FunctionalAuthModal: React.FC<FunctionalAuthModalProps> = ({
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const { authenticateUser } = useAppContext();
 
   // États des formulaires
-  const [loginData, setLoginData] = useState<LoginData>({
+  const [loginData, setLoginData] = useState({
     email: '',
     password: ''
   });
 
-  const [registerData, setRegisterData] = useState<RegisterData>({
+  const [registerData, setRegisterData] = useState({
     name: '',
     email: '',
     password: '',
@@ -42,14 +43,23 @@ export const FunctionalAuthModal: React.FC<FunctionalAuthModalProps> = ({
     setError('');
 
     try {
-      const result = await authService.login(loginData);
+      // Simulation de connexion
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      if (result.success && result.user) {
-        onAuthSuccess(result.user);
+      const mockUser = {
+        id: Date.now().toString(),
+        name: 'Utilisateur connecté',
+        email: loginData.email,
+        avatar: 'https://ui-avatars.com/api/?name=User&background=3B82F6&color=fff',
+        location: 'Abidjan, Côte d\'Ivoire',
+        rating: 5.0,
+        reviews: 0,
+        bio: 'Nouveau membre ServiceHub'
+      };
+      
+      authenticateUser(mockUser);
+      onAuthSuccess(mockUser);
         onClose();
-      } else {
-        setError(result.message || 'Erreur de connexion');
-      }
     } catch (err) {
       setError('Erreur de connexion au serveur');
     } finally {
@@ -63,14 +73,24 @@ export const FunctionalAuthModal: React.FC<FunctionalAuthModalProps> = ({
     setError('');
 
     try {
-      const result = await authService.register(registerData);
+      // Simulation d'inscription
+      await new Promise(resolve => setTimeout(resolve, 1200));
       
-      if (result.success && result.user) {
-        onAuthSuccess(result.user);
+      const newUser = {
+        id: Date.now().toString(),
+        name: registerData.name,
+        email: registerData.email,
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(registerData.name)}&background=3B82F6&color=fff`,
+        location: registerData.location,
+        rating: 5.0,
+        reviews: 0,
+        bio: registerData.isExpert ? 'Expert ServiceHub' : 'Nouveau membre ServiceHub',
+        role: registerData.isExpert ? 'expert' : 'user'
+      };
+      
+      authenticateUser(newUser);
+      onAuthSuccess(newUser);
         onClose();
-      } else {
-        setError(result.message || 'Erreur d\'inscription');
-      }
     } catch (err) {
       setError('Erreur de connexion au serveur');
     } finally {

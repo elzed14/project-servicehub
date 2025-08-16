@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { User, Edit, Star, MapPin, Calendar, FileText, MessageCircle, Settings, Shield } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
-import { serviceService } from '../services/serviceService';
+import { serviceService } from '../shared/services/serviceService';
 import { Service } from '../types';
-import ServiceCard from './ServiceCard';
+import { useNavigate } from 'react-router-dom';
 import AdminProfile from './AdminProfile';
 
 export default function ProfilePage() {
   const { state } = useAppContext();
   const { currentUser } = state;
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('services');
   const [userServices, setUserServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(false);
@@ -18,11 +19,11 @@ export default function ProfilePage() {
       if (currentUser) {
         setLoading(true);
         try {
-          // Simuler la récupération des services de l'utilisateur
-          const response = await serviceService.getServices({});
-          // Filtrer les services de l'utilisateur connecté
-          const filteredServices = response.data.filter(
-            service => service.provider.name === currentUser.name
+          const response = await serviceService.searchServices({
+            query: currentUser.name
+          });
+          const filteredServices = response.services.filter(
+            service => service.expert.name === currentUser.name
           );
           setUserServices(filteredServices);
         } catch (error) {
@@ -69,11 +70,29 @@ export default function ProfilePage() {
       ) : userServices.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {userServices.map((service) => (
-            <ServiceCard
+            <div
               key={service.id}
-              service={service}
-              onContact={() => {}}
-            />
+              className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => navigate(`/expert/${service.expert._id}`)}
+            >
+              {service.images && service.images[0] && (
+                <img
+                  src={service.images[0]}
+                  alt={service.title}
+                  className="w-full h-32 object-cover rounded-lg mb-4"
+                />
+              )}
+              <h4 className="font-semibold text-gray-900 mb-2">{service.title}</h4>
+              <p className="text-gray-600 text-sm mb-3 line-clamp-2">{service.description}</p>
+              <div className="flex items-center justify-between">
+                <span className="text-lg font-bold text-blue-600">
+                  {service.price.toLocaleString()} FCFA
+                </span>
+                <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                  {service.category}
+                </span>
+              </div>
+            </div>
           ))}
         </div>
       ) : (
@@ -85,7 +104,7 @@ export default function ProfilePage() {
           <p className="text-gray-500 mb-4">
             Commencez par publier votre premier service pour attirer des clients.
           </p>
-          <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+          <button onClick={() => navigate('/become-expert')} className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
             Publier un service
           </button>
         </div>

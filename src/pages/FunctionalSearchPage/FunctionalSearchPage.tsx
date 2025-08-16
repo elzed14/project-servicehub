@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Search, MapPin, Filter, Star, Grid, List, Loader2 } from 'lucide-react';
 import { serviceService, Service, Expert, SearchFilters } from '../../shared/services/serviceService';
@@ -8,6 +8,7 @@ import { ExpertCard } from '../../shared/components/ui/ExpertCard';
 
 export const FunctionalSearchPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [services, setServices] = useState<Service[]>([]);
   const [experts, setExperts] = useState<Expert[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -273,6 +274,7 @@ export const FunctionalSearchPage: React.FC = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
                     className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
+                    onClick={() => navigate(`/expert/${service._id}`)}
                   >
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">
                       {service.title}
